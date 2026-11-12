@@ -15,8 +15,33 @@ namespace SENTRAL
 
         static void Main(string[] args)
         {
+            // database oppsett
+            string databaseMappe = Path.Combine(AppContext.BaseDirectory, "database");
+            Directory.CreateDirectory(databaseMappe);
+
+            string dbPath = Path.Combine(databaseMappe, "adgangskontroll.db");
+            string connectionString = $"Data Source={dbPath}";
+
+            if (!File.Exists(dbPath))
+            {
+                string sql = File.ReadAllText(
+                    Path.Combine(databaseMappe, "adgangskontroll_kommentert.sql"));
+
+                using (SqliteConnection connection = new SqliteConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (SqliteCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = sql;
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+
+
             // starter serveren vår som bakgrunnstråd.
-            string connectionString = @"Data Source=database\adgangskontroll.db";
+
             Thread bk = new Thread(() => backgrunnsKommunikasjon(connectionString));
             bk.IsBackground = true;
             bk.Start();
