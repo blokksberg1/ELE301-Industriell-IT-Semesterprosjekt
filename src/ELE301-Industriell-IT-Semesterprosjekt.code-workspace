@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "TemperaturOppgåveTEST",
+			"path": "../../../ELE201 H26/TemperaturOppgåveTEST"
+		},
+		{
+			"name": "Temperaturmåling_TEST2",
+			"path": "../../../ELE201 H26/Temperaturmåling_TEST2"
+		},
+		{
+			"name": "TMP og MOTOR",
+			"path": "../../../ELE201 H26/TMP og MOTOR"
+		}
+	],
+	"settings": {}
+}
