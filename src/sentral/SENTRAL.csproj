@@ -16,5 +16,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
+	<ItemGroup>
+		<None Include="..\..\database\adgangskontroll_kommentert.sql"
+			  Link="database\adgangskontroll_kommentert.sql"
+			  CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 </Project>

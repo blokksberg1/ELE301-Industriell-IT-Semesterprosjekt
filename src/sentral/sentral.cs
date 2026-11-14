@@ -11,98 +11,137 @@ namespace SENTRAL
 {
     internal class sentral
     {
-        enum Side { startside, adminbruker, adminkort, rapoort, avslutt }
+        enum Side { startside, adminbruker, adminkort, rapport, avslutt }
 
         static void Main(string[] args)
         {
+            // database oppsett
+            string databaseMappe = Path.Combine(AppContext.BaseDirectory, "database");
+            Directory.CreateDirectory(databaseMappe);
+
+            string dbPath = Path.Combine(databaseMappe, "adgangskontroll.db");
+            string connectionString = $"Data Source={dbPath}";
+
+            if (!File.Exists(dbPath))
+            {
+                string sql = File.ReadAllText(
+                    Path.Combine(databaseMappe, "adgangskontroll_kommentert.sql"));
+
+                using (SqliteConnection connection = new SqliteConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (SqliteCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = sql;
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+
+
             // starter serveren vår som bakgrunnstråd.
-            string connectionString = @"Data Source=database\adgangskontroll.db";
+
             Thread bk = new Thread(() => backgrunnsKommunikasjon(connectionString));
             bk.IsBackground = true;
             bk.Start();
 
             Side tilstand = Side.startside;
-            string komando = "";
+            string kommando = "";
 
             while (true)
             {
+                Console.Clear();
                 switch (tilstand)
                 {
                     case Side.startside:
-                        Console.Clear();
-                        Console.WriteLine(" Vellkomen til sentralen hva har du lyst til og gjøre\n\n" +
-                                          " 1. Administrerebrukere\n 2. Administerekortleserer\n 3. Rapporter \n 4. Avslutt");
-                        komando = Console.ReadLine();
+                        
+                        Console.WriteLine("-------- SENTRAL --------\n" +
+                                          "       |Hovedmeny|      \n\n" +
+                                          "Skriv inn kommando:\n" +
+                                          "1: Administrer brukere\n2: Administer kortleserer\n3: Vis rapporter\n4. Avslutt");
+                        kommando = Console.ReadLine();
 
-                        if (komando == "1")
+                        if (kommando == "1")
                         { tilstand = Side.adminbruker; }
-                        else if (komando == "2")
+                        else if (kommando == "2")
                         { tilstand = Side.adminkort; }
+                        else if (kommando == "3")
+                        { tilstand = Side.rapport; }
+                        else if (kommando == "4")
+                        { tilstand = Side.avslutt; }
                         break;
 
-                    case Side.adminbruker:
-                        Console.Clear();
-                        Console.WriteLine("Vellkomen til admin siden hva har du lyst til og gjøre\n" +
-                                          "1. legge til en ny bruker, 2. slette en bruker \n" +
-                                          "3. redigere eksisterende bruker, 4. gå tilbake til startide\n" +
-                                          "5: hent ut bruker info" +
-                                          "\n Hva vil du gjøre:");
-                        komando = Console.ReadLine();
 
-                        if (komando == "1")
+                    case Side.adminbruker:
+
+                        Console.WriteLine("-------- SENTRAL --------\n" +
+                                          "        |Brukere|      \n\n" +
+                                          "Skriv inn kommando:\n" +
+                                          "1: Legg til bruker\n2. Fjern bruker \n" +
+                                          "3: Rediger eksisterende bruker\n4: Hent brukerinfo\n" +
+                                          "5: Startside"
+                                          );
+                        kommando = Console.ReadLine();
+
+                        if (kommando == "1")
                         {
                             leggtilBruker(connectionString);
                             tilstand = Side.startside;
                         }
-                        else if (komando == "2")
+                        else if (kommando == "2")
                         {
                             slettBruker(connectionString);
-                            Console.Clear();
+
                             Console.WriteLine("bruker er nå slettet");
                             Console.ReadKey();
                             tilstand = Side.startside;
                         }
-                        else if (komando == "3")
+                        else if (kommando == "3")
                         {
                             RedigerBruker(connectionString);
                             tilstand = Side.startside;
                         }
-                        else if (komando == "4")
-                        { tilstand = Side.startside; }
-                        else if (komando == "5")
+                        else if (kommando == "4")
                         {
                             HentUtBrukerInfo(connectionString);
                             Console.ReadKey();
                             tilstand = Side.startside;
                         }
+                        else if (kommando == "5")
+                        { tilstand = Side.startside; }
                         break;
 
                     case Side.adminkort:
-                        Console.Clear();
-                        Console.WriteLine("hva har du lyst til og gjøre idag:\n" +
-                                          "1. Legge til ny kortleser, 2. slette en kortleser\n" +
-                                          "3. redigere en eksisterende kortleser, 4.hent ut info om en kortleser?");
-                        komando = Console.ReadLine();
 
-                        if (komando == "1")
+                        Console.WriteLine("-------- SENTRAL --------\n" +
+                                          "      |Kortlesere|      \n\n" +
+                                          "Skriv inn kommando:\n" +
+                                          "1: Legg til kortleser\n2: Fjern kortleser \n" +
+                                          "3: Rediger eksisterende kortleser\n4: Hent kortleserinfo\n" +
+                                          "5: Startside"
+                                          );
+                        kommando = Console.ReadLine();
+
+                        if (kommando == "1")
                         {
                             leggTilKortleser(connectionString);
                             Console.ReadKey();
                             tilstand = Side.startside;
                         }
-                        else if (komando == "2")
+                        else if (kommando == "2")
                         {
                             slettKortleser(connectionString);
                             Console.ReadKey();
                             tilstand = Side.startside;
                         }
-                        else if (komando == "3")
+                        else if (kommando == "3")
                         {
                             redigerKortleser(connectionString);
                             Console.ReadKey();
                             tilstand = Side.startside;
                         }
-                        else if (komando == "4")
+                        else if (kommando == "4")
                         {
                             hentUtKortleserInfo(connectionString);
                             Console.ReadKey();
@@ -110,13 +149,15 @@ namespace SENTRAL
                         }
                         break;
 
-                    case Side.rapoort:
-                        Console.Clear();
-                        Console.WriteLine("Vellkomen til raportsiden, hva har du lyst til og gjøre\n" +
-                                          "1 gå tilbake til startside");
-                        komando = Console.ReadLine();
+                    case Side.rapport:
 
-                        if (komando == "1")
+                        Console.WriteLine("-------- SENTRAL --------\n" +
+                                          "       |Rapporter|      \n\n" +
+                                          "Skriv inn kommando:\n" +
+                                          "1: Startside");
+                        kommando = Console.ReadLine();
+
+                        if (kommando == "1")
                         { tilstand = Side.startside; }
                         break;
                 }
