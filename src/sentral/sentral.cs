@@ -500,33 +500,52 @@ namespace SENTRAL
                 data = Encoding.ASCII.GetBytes(hilsen);
                 kommSokkel.Send(data, data.Length, SocketFlags.None);
 
-                // mottar informasjon fra klienten
-                int nMottatt = kommSokkel.Receive(data);
 
-                // gjør mottatt informasjon om til tekst
-                mottattTekst = Encoding.ASCII.GetString(data, 0, nMottatt);
-
-                // deler opp teksten ved semikolon
-                string[] informasjon = mottattTekst.Split(';');
-
-                // lagrer KortID og PIN i egne variabler
-                string kortID = informasjon[0];
-                string pin = informasjon[1];
-                string kortleserId = informasjon[2];
-
-                bool svar = sjekkAvKort(pin, kortID, connectionString);
-
-                if (svar == true)
+                while (true) // håndtering av kortleser status iguess
                 {
-                    Console.WriteLine("godkjent mofo");
-                }
-                else
-                {
-                    Console.WriteLine("ikke godkjent mofo");
-                }
+                    // mottar informasjon fra klienten
+                    data = new byte[1024];
+                    int nMottatt = kommSokkel.Receive(data);
 
-                LoggføringsValg(svar, kortID, kortleserId, connectionString);
+                    Console.WriteLine($"Antall bytes mottatt: {nMottatt}");
+                    if (nMottatt == 0) // hopper ut av indre while løkke hvis kobling brutes
+                    {
+                        break;
+                    }
 
+                    // gjør mottatt informasjon om til tekst
+                    mottattTekst = Encoding.ASCII.GetString(data, 0, nMottatt);
+                    Console.WriteLine($"Mottatt: [{mottattTekst}]");
+
+                    // deler opp teksten ved semikolon
+                    string[] informasjon = mottattTekst.Split(';');
+
+                    // lagrer KortID og PIN i egne variabler
+                    string kortID = informasjon[0];
+                    string pin = informasjon[1];
+                    string kortleserId = informasjon[2];
+                    
+
+                    bool svar = sjekkAvKort(pin, kortID, connectionString);
+
+                    if (svar == true)
+                    {
+                        Console.WriteLine("godkjent mofo");
+                        bool godkjentEllerIkke = true;
+                        data = BitConverter.GetBytes(godkjentEllerIkke);
+                        kommSokkel.Send(data, data.Length, SocketFlags.None);
+                    }
+                    else
+                    {
+                        Console.WriteLine("ikke godkjent mofo");
+                        bool godkjentEllerIkke = false;
+                        data = BitConverter.GetBytes(godkjentEllerIkke);
+                        kommSokkel.Send(data, data.Length, SocketFlags.None);
+                        
+                    }
+
+                    LoggføringsValg(svar, kortID, kortleserId, connectionString);
+                }
                 // avslutter forbindelsen
                 kommSokkel.Close();
             }
